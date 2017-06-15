@@ -1,0 +1,18 @@
+{
+  "name": "paper.js_proj1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ./server"
+  },
+  "author": "Jasiu Leja <jleja09@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "jquery": "^3.2.1",
+    "morgan": "^1.8.2",
+    "paper": "^0.11.3"
+  },
+  "devDependencies": {}
+}

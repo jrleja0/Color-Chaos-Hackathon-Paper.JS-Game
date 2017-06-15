@@ -1,0 +1,14 @@
+body {
+  background-color: #121;
+}
+
+#mainCanvas {
+  min-height: 500px;
+  min-width: 800px;
+  height: 100%;
+  width: 100%;
+}
+
+#bluePattern, #greenPattern, #yellowPattern {
+  visibility: hidden;
+}

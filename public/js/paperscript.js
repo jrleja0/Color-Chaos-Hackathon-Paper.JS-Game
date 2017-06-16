@@ -1,74 +1,202 @@
-var path = new Path.Circle({
-    center: view.center,
-    radius: 50,
-    fillColor: 'blue'
-});
+/* global Group, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
 
-// Install a drag event handler that moves the path along.
-path.onMouseDrag = function(event) {
-    path.position += event.delta;
+console.log('running-- w:', view.size.width, '&& h:', view.size.height);
+//const largerScreenDim = view.size.width > view.size.height ? view.size.width : view.size.height;
+
+
+//// creating background Symbols ////
+function createBackground(rasterColor) {
+  var quadrantSize = new Size(view.size.width / 2, view.size.height / 2);
+  var quadrant = new Path.Rectangle(new Point(0, 0), quadrantSize);
+  var backgroundRaster = new Raster(rasterColor);
+  //// cropping/masking backgroundRaster onto quadrant ////
+  var colorQuadrantGroup = new Group({
+    children: [quadrant, backgroundRaster],
+    clipped: true
+  });
+  backgroundRaster.fitBounds(quadrant.bounds, true);  //  "true" means background will fill the entire bounds, even if image is cropped.
+  var symbol = new Symbol(colorQuadrantGroup);
+  symbol.colorName = rasterColor;
+  symbol.background = true;
+  return symbol;
 }
 
+var blueBackgroundSymbol = createBackground('bluePattern');
+var greenBackgroundSymbol = createBackground('greenPattern');
+var redBackgroundSymbol = createBackground('redPattern');
+var yellowBackgroundSymbol = createBackground('yellowPattern');
 
 
-// // /* global Group, Path, Point, project, Raster, Symbol, Tool, view */
-// // //paper = require('../../node_modules/paper/dist/paper-full.min.js');
+//// creating four quadrants ////
+function createQuadrant(point) {
+  var quadrantSize = new Size(view.size.width / 2, view.size.height / 2);
+  return new Rectangle(point, quadrantSize); // Rectangle: point is top-right
+}
 
-// // // initializing program ////
-// // window.onload = () => {
-// //   paper.install(window);
-// //   paper.setup('mainCanvas');
-  console.log('running-- w:', view.size.width, '&& h:', view.size.height);
-// //   //const largerScreenDim = view.size.width > view.size.height ? view.size.width : view.size.height;
+var quadrant0 = createQuadrant(new Point(0, 0));
+var quadrant1 = createQuadrant(new Point(view.size.width / 2, 0));
+var quadrant2 = createQuadrant(new Point(0, view.size.height / 2));
+var quadrant3 = createQuadrant(new Point(view.size.width / 2, view.size.height / 2));
 
 
+//// function to add background Symbols to quadrants ////
+var backgroundGroup = new Group();
+backgroundGroup.name = 'backgroundGroup';
 
-   var circle1 = new Path.Circle(new Point(400, 300), view.size.height / 12);
-   circle1.fillColor = 'blue';
-
-//   //// creating green background ////
-//   //const greenBackground = new Raster('greenPattern');
-//   //greenBackground.fitBounds(view.bounds, true);
-//   //// greenBackground.position = view.center;  // greenBackground.scale(2.5);
-
-  //// creating yellow and blue symbols ////
-  var createCircleSymbol = function(color) {
-    var circle = new Path.Circle(new Point(100, 100), view.size.height / 12);    //  Path.Circle(new Point(100, 100), 60);
-    var colorBackground = new Raster(color);
-    colorBackground.scale(0.25);
-    //// cropping/masking colorBackground onto circle ////
-    var colorCircleGroup = new Group({
-      children: [circle, colorBackground],
-      clipped: true
-    });
-    colorBackground.fitBounds(circle.bounds);
-    return new Symbol(colorCircleGroup);
-    // return new Symbol(colorBackground);  /// return for square symbol, not circular.
+function addToQuadrant(quadrant) {
+  return function (backgroundSymbol) {
+    // console.log(backgroundSymbol);
+    // console.log(quadrant.x, quadrant.y, quadrant);
+    var symbol = backgroundSymbol.place(quadrant.center);
+    backgroundGroup.addChild(symbol);
+    quadrant.colorName = backgroundSymbol.colorName;
   };
-  var yellowSymbol = createCircleSymbol('yellowPattern');
-  var blueSymbol = createCircleSymbol('bluePattern');
+}
+
+var addToQuadrant0 = addToQuadrant(quadrant0);
+var addToQuadrant1 = addToQuadrant(quadrant1);
+var addToQuadrant2 = addToQuadrant(quadrant2);
+var addToQuadrant3 = addToQuadrant(quadrant3);
 
 
-yellowSymbol.place(200, 200);
-//blueSymbol.place(600, 600);
+//// actually adding the backgrounds to the canvas:
+
+addToQuadrant0(blueBackgroundSymbol);
+addToQuadrant1(greenBackgroundSymbol);
+addToQuadrant2(redBackgroundSymbol);
+addToQuadrant3(yellowBackgroundSymbol);
+
+
+
+
+
+//// TO DO:
+//// create symbol
+//// place each color symbol in each quadrant
+//// change whether it is visible or not.
+
+
+
+//// creating circle symbols ////
+var createCircleSymbol = function(color, rotationDegree) {
+  var smallerViewDim = Math.min(view.size.height, view.size.width);
+  var circle = new Path.Circle(new Point(100, 100), smallerViewDim / 12);    //  Path.Circle(new Point(100, 100), 60);
+  var colorBackground = new Raster(color);
+  colorBackground.scale(0.25);
+  //// cropping/masking colorBackground onto circle ////
+  var colorCircleGroup = new Group({
+    children: [circle, colorBackground],
+    clipped: true
+  });
+  colorBackground.fitBounds(circle.bounds);
+  var symbol = new Symbol(colorCircleGroup);
+  symbol.colorName = color;
+  symbol.background = false;
+  return symbol;
+};
+
+var blueSymbol = createCircleSymbol('bluePattern');
+var greenSymbol = createCircleSymbol('greenPattern');
+var redSymbol = createCircleSymbol('redPattern');
+var yellowSymbol = createCircleSymbol('yellowPattern');
+
+
+
+//// placing circle symbols:
+yellowSymbol.place(quadrant3.center);
+redSymbol.place(quadrant2.center);
+greenSymbol.place(quadrant1.center);
+blueSymbol.place(quadrant0.center);
 
 console.log(project.activeLayer.children);
+// console.log(yellowSymbol.name === yellowBackgroundSymbol.name);
+// console.log(blueSymbol.name === blueBackgroundSymbol.name);
+// console.log(greenSymbol.name === greenBackgroundSymbol.name);
+// console.log(redSymbol.name === redBackgroundSymbol.name);
 
 
-//yellowSymbol.definition.onMouseDrag = (e) => {
-//circle1.onMouseDrag = (e) => {
-var tool = new Tool();
-var selectedObject = null;
+  //// testing the .definition.colorName and .definition.background properties on the instances:
+  for (var a = 0; a < backgroundGroup.children.length; a++) {
+    console.log('backGroup', 'name', backgroundGroup.children[a].definition.colorName, 'background', backgroundGroup.children[a].definition.background);
+  }
+
+  for (var b = 1; b < project.activeLayer.children.length; b++) {
+    console.log('name', project.activeLayer.children[b].definition.colorName, 'background', project.activeLayer.children[b].definition.background);
+  }
+  console.log(quadrant0.colorName);
+  console.log(quadrant1.colorName);
+  console.log(quadrant2.colorName);
+  console.log(quadrant3.colorName);
+
+
+  // project.activeLayer.children[0].remove();
+  // project.activeLayer.children[1].remove();
+  // project.activeLayer.children[2].remove();
+  // project.activeLayer.children[3].remove();
+
+  console.log('child num', project.activeLayer.children);
+
+  // project.activeLayer.children.insertChild(0, )
+
+
+
+//// instantiating onMouseDown ////
+var tool = new Tool(),
+  selectedObject = null,
+  dragCounter = 0,
+  points = 0;
+
 tool.onMouseDown = function(e) {
+  console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
-  selectedObject = hitResult ? hitResult.item : null;
-};
-
-tool.onMouseDrag = function(e) {
-  if (selectedObject) {
-    selectedObject.position += e.delta;
+  if (hitResult) {
+    selectedObject = hitResult.item;
+    selectedObject.newVectorX = 0;
+    selectedObject.newVectorY = 0;
+    dragCounter = 0;
   }
 };
+
+//// instantiating onMouseDrag ////
+tool.onMouseDrag = function(e) {
+  //console.log(e.delta);
+  if (selectedObject && dragCounter < 1) {
+    selectedObject.newVectorX += e.delta.x / 10;  // x / 10 and 1 drag event.
+    selectedObject.newVectorY += e.delta.y / 10;
+  }
+};
+
+
+//// instantiating onFrame ////
+view.onFrame = function(e) {
+  //console.log(selectedObject ? selectedObject.newVectorX : null);
+
+  // rotate circle symbols:
+  blueSymbol.definition.rotate(1);
+  greenSymbol.definition.rotate(1);
+  redSymbol.definition.rotate(-1);
+  yellowSymbol.definition.rotate(-1);
+
+  // move circle symbols:
+  for (var i = 0; i < project.activeLayer.children.length; i++) {
+    var symbol = project.activeLayer.children[i];
+    if (symbol.name === 'backgroundGroup' || symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
+    // if (symbol.position.y > quadrant1.left) {
+    //   if (symbol.definition.colorName === quadrant1.colorName) {
+    //     points++;
+    //   }
+    // }
+    // e.count % 50 === 0 ? console.log('points', points, symbol.position.y, quadrant1.left, symbol.definition.colorName, quadrant1.colorName) : null;
+    if (symbol.newVectorX || symbol.newVectorY) {
+      symbol.position.x += symbol.newVectorX;
+      symbol.position.y += symbol.newVectorY;
+    } else {
+      symbol.position += new Point(5, 0);
+    }
+  }
+};
+
+
 
 // //   console.log(e.delta);
 // //   circle1.position += e.delta;

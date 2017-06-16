@@ -1,14 +1,17 @@
-body {
+html, body {
   background-color: #121;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 #mainCanvas {
-  min-height: 500px;
-  min-width: 800px;
+  /*min-height: 500px;
+  min-width: 500px;*/
   height: 100%;
   width: 100%;
 }
 
-#bluePattern, #greenPattern, #yellowPattern {
+#bluePattern, #greenPattern, #redPattern, #yellowPattern {
   visibility: hidden;
 }

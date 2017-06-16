@@ -92,6 +92,7 @@ var createCircleSymbol = function(color, rotationDegree) {
   var symbol = new Symbol(colorCircleGroup);
   symbol.colorName = color;
   symbol.background = false;
+  symbol.radius = smallerViewDim / 12;
   return symbol;
 };
 
@@ -129,12 +130,19 @@ console.log(project.activeLayer.children);
   console.log(quadrant3.colorName);
 
 
+// testing midpoint:
+// console.log(view.bounds.center);
+// var circleMidPoint = new Path.Circle(view.bounds.center, 10);
+// circleMidPoint.fillColor = 'white';
+
+
   // project.activeLayer.children[0].remove();
   // project.activeLayer.children[1].remove();
   // project.activeLayer.children[2].remove();
   // project.activeLayer.children[3].remove();
 
   console.log('child num', project.activeLayer.children);
+console.log(quadrant0);
 
   // project.activeLayer.children.insertChild(0, )
 
@@ -144,7 +152,7 @@ console.log(project.activeLayer.children);
 var tool = new Tool(),
   selectedObject = null,
   dragCounter = 0,
-  points = 0;
+  score = 0;
 
 tool.onMouseDown = function(e) {
   console.log('mouse down');
@@ -167,26 +175,90 @@ tool.onMouseDrag = function(e) {
 };
 
 
+
+function symbolBoundsCreator(symbol) {
+  return ([
+    (symbol.position - new Point(symbol.definition.radius, 0)),  // leftCenter point
+    (symbol.position + new Point(symbol.definition.radius, 0)),  // rightCenter point
+    (symbol.position - new Point(0, symbol.definition.radius)),  // topCenter point
+    (symbol.position + new Point(0, symbol.definition.radius))   // bottomCenter point
+  ]);
+}
+
+
+function overQuadrant0(point) {
+  return point.x < view.bounds.center.x && point.y < view.bounds.center.y;
+}
+function overQuadrant1(point) {
+  return point.x > view.bounds.center.x && point.y < view.bounds.center.y;
+}
+function overQuadrant2(point) {
+  return point.x < view.bounds.center.x && point.y > view.bounds.center.y;
+}
+function overQuadrant3(point) {
+  return point.x > view.bounds.center.x && point.y > view.bounds.center.y;
+}
+
+function checkingQuadrantOverlap(symbolPoint) {
+  if (overQuadrant0(symbolPoint)) {
+    return quadrant0;
+  } else if (overQuadrant1(symbolPoint)) {
+    return quadrant1;
+  } else if (overQuadrant2(symbolPoint)) {
+    return quadrant2;
+  } else if (overQuadrant3(symbolPoint)) {
+    return quadrant3;
+  }
+}
+
+function checkingColorMatch(symbol, quadrant) {
+    return symbol.definition.colorName === quadrant.colorName;
+}
+
+function symbolInBounds(symbolBounds) {
+  var leftCenter = symbolBounds[0],
+    rightCenter = symbolBounds[1],
+    topCenter = symbolBounds[2],
+    bottomCenter = symbolBounds[3];
+  return (rightCenter.x > 0 && leftCenter.x < view.bounds.width &&  // returns true if in bounds.
+    bottomCenter.y > 0 && topCenter.y < view.bounds.height);
+}
+
+
 //// instantiating onFrame ////
 view.onFrame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
 
-  // rotate circle symbols:
+  //// rotate circle symbols:
   blueSymbol.definition.rotate(1);
   greenSymbol.definition.rotate(1);
   redSymbol.definition.rotate(-1);
   yellowSymbol.definition.rotate(-1);
 
-  // move circle symbols:
-  for (var i = 0; i < project.activeLayer.children.length; i++) {
-    var symbol = project.activeLayer.children[i];
+  //// iterating through symbols:
+  for (var a = 0; a < project.activeLayer.children.length; a++) {
+    var symbol = project.activeLayer.children[a];
     if (symbol.name === 'backgroundGroup' || symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
-    // if (symbol.position.y > quadrant1.left) {
-    //   if (symbol.definition.colorName === quadrant1.colorName) {
-    //     points++;
-    //   }
-    // }
-    // e.count % 50 === 0 ? console.log('points', points, symbol.position.y, quadrant1.left, symbol.definition.colorName, quadrant1.colorName) : null;
+
+    //// adding/subtracting from score for each symbol:
+    var symbolBounds = symbolBoundsCreator(symbol);  // finding leftCenter, rightCenter, topCenter, bottomCenter points
+    if (!symbolInBounds(symbolBounds)) {
+      symbol.remove();
+      a--;
+      continue;
+    }
+
+    //// iterating through symbolBounds' points
+    for (var b = 0; b < symbolBounds.length; b++) {
+      var borderingQuadrant = checkingQuadrantOverlap(symbolBounds[b]);  // returns quadrant that symbolPoint overlaps.
+      var colorMatch = checkingColorMatch(symbol, borderingQuadrant);  // Boolean
+      score += colorMatch ? 2 : -1;
+    }
+
+    //// keeping track of score
+    e.count % 50 === 0 ? console.log('SCORE!', score) : null;
+
+    //// moving each symbol
     if (symbol.newVectorX || symbol.newVectorY) {
       symbol.position.x += symbol.newVectorX;
       symbol.position.y += symbol.newVectorY;
@@ -198,9 +270,7 @@ view.onFrame = function(e) {
 
 
 
-// //   console.log(e.delta);
-// //   circle1.position += e.delta;
-// // };
+
 
 
 // //   //// populate symbol objects ////
@@ -211,16 +281,6 @@ view.onFrame = function(e) {
 // //     blueSymbol.place(view.size.multiply(Point.random()));
 // //   };
 
-// // //// basic onMouseDown tool ////
-// //   const tool = new Tool();
-// //   tool.onMouseDown = (e) => {
-// //     //// replace selected symbol with different color symbol ////
-// //     let hitResult = project.activeLayer.hitTest(e.point);
-// //     console.log(hitResult.item._index);   // hitResult.item shows _id and _index (in layer)
-// //     if (hitResult.item._index !== 0) {
-// //       hitResult.item.remove();
-// //     }
-// //   };
 
 // //   let fading = true;
 // //   view.onFrame = (e) => {

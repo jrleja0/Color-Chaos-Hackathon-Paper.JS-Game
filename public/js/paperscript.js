@@ -1,6 +1,6 @@
-/* global game, Group, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
+/* global game, Group, io, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
 
-window.game = new window.EventEmitter();
+var socket = io();
 
 console.log('running-- w:', view.size.width, '&& h:', view.size.height);
 //const largerScreenDim = view.size.width > view.size.height ? view.size.width : view.size.height;
@@ -154,16 +154,37 @@ console.log(quadrant0);
 var tool = new Tool(),
   selectedObject = null,
   dragCounter = 0,
-  score = 0;
+  score = 0,
+  gameNotStarted = true;
 
 tool.onMouseDown = function(e) {
   console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
   if (hitResult) {
     selectedObject = hitResult.item;
-    selectedObject.newVectorX = 0;
-    selectedObject.newVectorY = 0;
-    dragCounter = 0;
+    // functionality to start game:
+    if (gameNotStarted) {
+      var color = selectedObject.definition.colorName;
+      var background = selectedObject.definition.background;
+      console.log(color, '&&', background);
+      if (background) return;
+      gameNotStarted = false;
+      if (color === 'bluePattern' && !background) {
+        socket.emit('startGame');
+      } else if (color === 'greenPattern' && !background) {
+        socket.emit('startGame');
+      } else if (color === 'redPattern' && !background) {
+        socket.emit('startGame');
+      } else if (color === 'yellowPattern' && !background) {
+        socket.emit('startGame');
+      }
+    }
+    // functionality during game play:
+    else {
+      selectedObject.newVectorX = 0;
+      selectedObject.newVectorY = 0;
+      dragCounter = 0;
+    }
   }
 };
 
@@ -232,7 +253,7 @@ function symbolInBounds(symbolBounds) {
 
 
 //// onFrame function (not yet called on view.onFrame):
-var gameAnimation = function(e) {
+var animateGame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
 
   //// rotate circle symbols:
@@ -274,18 +295,23 @@ var gameAnimation = function(e) {
   }
 };
 
-game.startAnimation = function(gameAnimation) {
-  console.log(gameAnimation);
-  view.onFrame = gameAnimation;
-};
+function startAnimation(animateGameFn) {
+  //console.log(animateGameFn);
+  view.onFrame = animateGameFn;
+}
 
-game.hello = function() {
-  console.log('hello world');
-};
-game.emit('hello');
+socket.on('startGame', function() {
+  console.log('starting game via socket!!!');
+  startAnimation(animateGame);
+});
+
+// game.hello = function() {
+//   console.log('hello world');
+// };
+// game.emit('hello');
 
 
-game.emit('game', gameAnimation);
+// game.emit('game', gameAnimation);
 
 
 

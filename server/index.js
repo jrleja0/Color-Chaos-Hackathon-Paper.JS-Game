@@ -33,4 +33,20 @@ const server = app.listen(8000, (err) => {
 
 const io = socketio(server);
 
+// receives newly connected socket
+io.on('connection', (socket) => {
+  console.log(':) Client connected. Id:', socket.id);
+
+  socket.on('startGame', () => {
+    //console.log(animateGameFn, '!!!!');
+    io.emit('startGame');
+  });
+
+  socket.on('disconnect', () => {
+    console.log(':(');
+    io.emit(':( someone disconnected');
+  });
+});
+
+
 module.exports = app;

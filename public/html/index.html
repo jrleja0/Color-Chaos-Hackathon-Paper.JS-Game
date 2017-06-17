@@ -8,18 +8,19 @@
 </head>
 
 <body>
-  <canvas id="mainCanvas" height="100%" width="100%" resize="true"></canvas>
+  <canvas id="mainCanvas" height="500px" width="500px"></canvas>
+  <!--<canvas id="mainCanvas" height="100%" width="100%" resize="true"></canvas>-->
   <img id="bluePattern" src="https://raw.githubusercontent.com/jrleja0/Tile-Abstraction/master/Blue%20Tile.jpeg" />
   <img id="greenPattern" src="https://raw.githubusercontent.com/jrleja0/Tile-Abstraction/master/Green%20Tile.jpeg" />
   <img id="redPattern" src="https://raw.githubusercontent.com/jrleja0/Tile-Abstraction/master/Red%20Tile.jpeg" />
   <img id="yellowPattern" src="https://raw.githubusercontent.com/jrleja0/Tile-Abstraction/master/Yellow%20Tile.jpeg" />
 
-  <!-- Load the Paper.js library -->
-  <script type="text/javascript" src="/paper/paper-full.min.js"></script>
-  <!-- Define inlined PaperScript and associate it with mainCanvas -->
-  <script type="text/javascript" src='/js/event-emitter.js'></script>
-  <script type="text/paperscript"  canvas="mainCanvas" src="/js/paperscript.js"></script>
+  <!-- Load the Socket.io and Paper.js libraries -->
   <script src="socket.io/socket.io.js"></script>
-  <script src="/js/app.js"></script>
+  <script type="text/javascript" src="/paper/paper-full.min.js"></script>
+  <!--<script type="text/javascript" src='/js/event-emitter.js'></script>-->
+  <!-- Define inlined PaperScript and associate it with mainCanvas -->
+  <script type="text/paperscript"  canvas="mainCanvas" src="/js/paperscript.js"></script>
+  <!--<script src="/js/app.js"></script>-->
 </body>
 </html>

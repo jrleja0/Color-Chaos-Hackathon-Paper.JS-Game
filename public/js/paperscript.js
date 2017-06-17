@@ -1,4 +1,6 @@
-/* global Group, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
+/* global game, Group, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
+
+window.game = new window.EventEmitter();
 
 console.log('running-- w:', view.size.width, '&& h:', view.size.height);
 //const largerScreenDim = view.size.width > view.size.height ? view.size.width : view.size.height;
@@ -212,7 +214,11 @@ function checkingQuadrantOverlap(symbolPoint) {
 }
 
 function checkingColorMatch(symbol, quadrant) {
+  if (!symbol || !quadrant) {
+    return false;
+  } else {
     return symbol.definition.colorName === quadrant.colorName;
+  }
 }
 
 function symbolInBounds(symbolBounds) {
@@ -225,8 +231,8 @@ function symbolInBounds(symbolBounds) {
 }
 
 
-//// instantiating onFrame ////
-view.onFrame = function(e) {
+//// onFrame function (not yet called on view.onFrame):
+var gameAnimation = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
 
   //// rotate circle symbols:
@@ -268,8 +274,18 @@ view.onFrame = function(e) {
   }
 };
 
+game.startAnimation = function(gameAnimation) {
+  console.log(gameAnimation);
+  view.onFrame = gameAnimation;
+};
+
+game.hello = function() {
+  console.log('hello world');
+};
+game.emit('hello');
 
 
+game.emit('game', gameAnimation);
 
 
 

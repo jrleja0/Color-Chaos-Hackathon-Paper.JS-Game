@@ -3,15 +3,16 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
-
+const socketio = require('socket.io');
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../public/html')));
-app.use(express.static(path.join(__dirname, '../public/css')));
+// app.use(express.static(path.join(__dirname, '../public/html')));
+// app.use(express.static(path.join(__dirname, '../public/css')));
+// app.use('/paperscript', express.static(path.join(__dirname, '../public/js')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/paper', express.static(path.join(__dirname, '../node_modules/paper/dist/')));
-app.use('/paperscript', express.static(path.join(__dirname, '../public/js')));
 
 // app.use('/api', routes);
 
@@ -25,9 +26,11 @@ app.use( (err, req, res, next) => {
   res.status(err.status || 500).send(err.message || 'Internal server error.');
 });
 
-app.listen(8000, (err) => {
+const server = app.listen(8000, (err) => {
   if (err) throw err;
   console.log('listening on 8000');
 });
+
+const io = socketio(server);
 
 module.exports = app;

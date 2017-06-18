@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
 const socketio = require('socket.io');
+const _every = require('lodash').every;
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -34,12 +35,21 @@ const server = app.listen(8000, (err) => {
 
 const io = socketio(server);
 
+var players = [],
+  scores = [];
+var createPlayer = (socketId) => {
+  return { socketId };
+}
+
 // io receives newly connected socket
 io.on('connection', (socket) => {
   console.log(':) Client connected. Id:', socket.id);
+  players.push(createPlayer(socket.id));
+  console.log('players:', players.length);
 
   socket.on('startGame', () => {
     //console.log(animateGameFn, '!!!!');
+    scores = [];
     io.emit('startGame');
   });
 
@@ -52,13 +62,32 @@ io.on('connection', (socket) => {
     io.emit('addSymbol', newSymbolInfo);
   });
 
-  socket.on('mouseDown', () => {
-    socket.broadcast.emit('mouseDown'); // one socket broadcasts event to all other sockets
+  socket.on('mouseDown', (symbolObject) => {
+    socket.broadcast.emit('mouseDown', symbolObject); // one socket broadcasts event to all other sockets
+  });
+
+  socket.on('mouseDrag', (x, y) => {
+    socket.broadcast.emit('mouseDrag', x, y);
+  });
+
+  socket.on('endGame', score => {
+    scores.push(score);
+    if (scores.length === players.length) {
+      //// sort scores
+      scores.sort((a, b) =>  b - a);
+      console.log('scores', scores);
+      io.emit('endGame', scores);
+    }
   });
 
   socket.on('disconnect', () => {
     console.log(':(');
-    io.emit('disconnect', ':( someone disconnected');  // io emits to all sockets
+
+    var playerIdxToDelete = players.map(player => player.socketId).indexOf(socket.id);
+    var removedPlayer = players.splice(playerIdxToDelete, 1);
+    console.log(playerIdxToDelete, removedPlayer);
+    console.log('pl', players);
+    //io.emit('disconnect', ':( someone disconnected');  // io emits to all sockets
   });
 });
 

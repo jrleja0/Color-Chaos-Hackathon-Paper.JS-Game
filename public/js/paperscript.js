@@ -260,8 +260,7 @@ function symbolInBounds(symbolBounds) {
 
 
 //// onFrame function (not yet called on view.onFrame):
-var newPoint,
-  startText,
+var startText,
   startTextOptions = {
     name: 'startText',
     position: new Point((view.bounds.width / 10), (view.bounds.height / 2)),
@@ -269,6 +268,11 @@ var newPoint,
     fillColor: 'white',
     content: 'Get Ready!'
   };
+
+function endGame() {
+  view.off('frame');
+}
+
 
 var animateGame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
@@ -279,8 +283,12 @@ var animateGame = function(e) {
   }
   if (e.count === 170) startText.remove();
 
+  if (e.count > 179 && e.count % 8 === 0) {  // e.count % 8
+    console.log(e.count)
+    randomSymbolSeeder();
+    //socket.emit('addSymbol');
+  }
 
-  e.count % 60 === 0 ? blueSymbol.place(new Point(-(blueSymbol.definition.radius), 300)) : null;
 
   //// rotate circle symbols:
   blueSymbol.definition.rotate(1);
@@ -321,7 +329,72 @@ var animateGame = function(e) {
       symbol.position += new Point(5, 0);
     }
   }
+
+  if (e.count === 6000) {
+    endGame();
+  }
 };
+
+
+
+
+function createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
+  var symbolTypes = [blueSymbol, greenSymbol, redSymbol, yellowSymbol];
+  var newSymbol = symbolTypes[randomSymbolType].place(new Point(newPositionX, newPositionY));
+  newSymbol.newVectorX = newVectorX;
+  newSymbol.newVectorY = newVectorY;
+}
+
+
+function randomSymbolSeeder(){
+  //blueSymbol.place(quadrant3.center);
+
+  var symbolRadius = blueSymbol.radius;
+  var randomSideOfScreen = Math.floor(Math.random() * 4); // top-right-bottom-left
+  var newSymbolLocation, newPositionX, newPositionY;
+  var randomPointX = Math.random() * view.bounds.width + 0.1;
+  var randomPointY = Math.random() * view.bounds.height + 0.1;
+  var pointX, pointY, newVectorX, newVectorY;
+  //// creating random point to enter from off-screen,
+  /// and newVectorX and newVectorY:
+  if (randomSideOfScreen === 0) {  // top
+    pointY = -(symbolRadius);
+    //newSymbolLocation = new Point(randomPointX, pointY);
+    newPositionX = randomPointX;
+    newPositionY = pointY;
+    newVectorX = Math.random() * 14 - 7 + 0.1;
+    newVectorY = Math.random() * 7 + 0.1;
+  } else if (randomSideOfScreen === 2) {  // bottom
+    pointY = (view.bounds.height + symbolRadius);
+    //newSymbolLocation = new Point(randomPointX, pointY);
+    newPositionX = randomPointX;
+    newPositionY = pointY;
+    newVectorX = Math.random() * 14 - 7 + 0.1;
+    newVectorY = -(Math.random() * 7 + 0.1);
+  } else if (randomSideOfScreen === 3) {  // left
+    pointX = -(symbolRadius);
+    //newSymbolLocation = new Point(pointX, randomPointY);
+    newPositionX = pointX;
+    newPositionY = randomPointY;
+    newVectorX = Math.random() * 7 + 0.1;
+    newVectorY = Math.random() * 14 - 7 + 0.1;
+  } else if (randomSideOfScreen === 1) {  // right
+    pointX = (view.bounds.width + symbolRadius);
+    //newSymbolLocation = new Point(pointX, randomPointY);
+    newPositionX = pointX;
+    newPositionY = randomPointY;
+    newVectorX = -(Math.random() * 7 + 0.1);
+    newVectorY = Math.random() * 14 - 7 + 0.1;
+  }
+  //// creating random symbol type:
+  var randomSymbolType = Math.floor(Math.random() * 4);
+  //var newSymbolType = symbolTypes[randomSymbolType];
+
+  // if emitting to other sockets, uncomment the line below:
+  // socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+  createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+}
+
 
 function startAnimation(animateGameFn) {
   //console.log(animateGameFn);
@@ -335,18 +408,20 @@ socket.on('startGame', function() {
   startAnimation(animateGame);
 });
 
-socket.on('mouseDown', resetObjectVectorAndDragCounter
-);
 
+// socket.on('addSymbol', function(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
+//   console.log('seed', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+//   var newSymbol = createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+//   console.log('newSymb', newSymbol);
+// });
 
+socket.on('addSymbol', function(newSymbolInfo) {
+  var newSymbol = createSymbol(newSymbolInfo['randomSymbolType'], newSymbolInfo['newPositionX'], newSymbolInfo['newPositionY'], newSymbolInfo['newVectorX'], newSymbolInfo['newVectorY']);
+  console.log('newSymb', newSymbol);
+});
 
-// game.hello = function() {
-//   console.log('hello world');
-// };
-// game.emit('hello');
-
-
-// game.emit('game', gameAnimation);
+  // socket.on('mouseDown', resetObjectVectorAndDragCounter
+  // );
 
 
 

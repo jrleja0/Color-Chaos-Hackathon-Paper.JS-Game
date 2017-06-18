@@ -107,10 +107,13 @@ var yellowSymbol = createCircleSymbol('yellowPattern');
 
 
 //// placing circle symbols:
-yellowSymbol.place(quadrant3.center);
-redSymbol.place(quadrant2.center);
-greenSymbol.place(quadrant1.center);
-blueSymbol.place(quadrant0.center);
+var yel1 = yellowSymbol.place(quadrant3.center);
+var red1 = redSymbol.place(quadrant2.center);
+var gre1 = greenSymbol.place(quadrant1.center);
+var blu1 = blueSymbol.place(quadrant0.center);
+
+var symbolsGroup = new Group([yel1, red1, gre1, blu1]);
+symbolsGroup.name = 'symbolsGroup';
 
 console.log(project.activeLayer.children);
 // console.log(yellowSymbol.name === yellowBackgroundSymbol.name);
@@ -124,8 +127,8 @@ console.log(project.activeLayer.children);
     console.log('backGroup', 'name', backgroundGroup.children[a].definition.colorName, 'background', backgroundGroup.children[a].definition.background);
   }
 
-  for (var b = 1; b < project.activeLayer.children.length; b++) {
-    console.log('name', project.activeLayer.children[b].definition.colorName, 'background', project.activeLayer.children[b].definition.background);
+  for (var b = 1; b < symbolsGroup.length; b++) {
+    console.log('name', symbolsGroup.children[b].definition.colorName, 'background', symbolsGroup.children[b].definition.background);
   }
   console.log(quadrant0.colorName);
   console.log(quadrant1.colorName);
@@ -156,7 +159,8 @@ var tool = new Tool(),
   selectedObject = null,
   dragCounter = 0,
   score = 0,
-  gameNotStarted = true;
+  gameNotStarted = true,
+  player1 = false;
 
 function resetObjectVectorAndDragCounter(object) {
     selectedObject = object;
@@ -178,6 +182,7 @@ tool.onMouseDown = function(e) {
       if (background) return;
       gameNotStarted = false;
       if (color === 'bluePattern' && !background) {
+        player1 = true;
         socket.emit('startGame');
       } else if (color === 'greenPattern' && !background) {
         socket.emit('startGame');
@@ -283,10 +288,10 @@ var animateGame = function(e) {
   }
   if (e.count === 170) startText.remove();
 
-  if (e.count > 179 && e.count % 8 === 0) {  // e.count % 8
-    console.log(e.count)
-    randomSymbolSeeder();
-    //socket.emit('addSymbol');
+  if (player1 && e.count > 179 && e.count % 8 === 0) {  // e.count % 8
+    console.log(e.count);
+    //randomSymbolSeeder();
+    socket.emit('addSymbol');
   }
 
 
@@ -297,12 +302,15 @@ var animateGame = function(e) {
   yellowSymbol.definition.rotate(-1);
 
   //// iterating through symbols:
-  for (var a = 0; a < project.activeLayer.children.length; a++) {
-    var symbol = project.activeLayer.children[a];
-    if (symbol.name === 'backgroundGroup' ||
-    symbol.name === 'startText' ||
-    symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
+  // for (var a = 0; a < project.activeLayer.children.length; a++) {
+  //   var symbol = project.activeLayer.children[a];
+  //   if (symbol.name === 'backgroundGroup' ||
+  //   symbol.name === 'startText' ||
+  //   symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
 
+  for (var a = 0; a < symbolsGroup.children.length; a++) {
+    var symbol = symbolsGroup.children[a];
+    console.log('newSy2', symbol);
     //// adding/subtracting from score for each symbol:
     var symbolBounds = symbolBoundsCreator(symbol);  // finding leftCenter, rightCenter, topCenter, bottomCenter points
     if (!symbolInBounds(symbolBounds)) {
@@ -341,8 +349,10 @@ var animateGame = function(e) {
 function createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
   var symbolTypes = [blueSymbol, greenSymbol, redSymbol, yellowSymbol];
   var newSymbol = symbolTypes[randomSymbolType].place(new Point(newPositionX, newPositionY));
+  symbolsGroup.addChild(newSymbol);
   newSymbol.newVectorX = newVectorX;
   newSymbol.newVectorY = newVectorY;
+  console.log('newsymb', symbolsGroup.children);
 }
 
 
@@ -391,7 +401,7 @@ function randomSymbolSeeder(){
   //var newSymbolType = symbolTypes[randomSymbolType];
 
   // if emitting to other sockets, uncomment the line below:
-  // socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+  //socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
   createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
 }
 
@@ -408,17 +418,16 @@ socket.on('startGame', function() {
   startAnimation(animateGame);
 });
 
-
 // socket.on('addSymbol', function(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
-//   console.log('seed', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-//   var newSymbol = createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-//   console.log('newSymb', newSymbol);
+//   console.log('seed', typeof randomSymbolType, typeof newPositionX, typeof newPositionY, typeof newVectorX, typeof newVectorY);
+//   createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
 // });
-
 socket.on('addSymbol', function(newSymbolInfo) {
+  console.log(newSymbolInfo);
   var newSymbol = createSymbol(newSymbolInfo['randomSymbolType'], newSymbolInfo['newPositionX'], newSymbolInfo['newPositionY'], newSymbolInfo['newVectorX'], newSymbolInfo['newVectorY']);
   console.log('newSymb', newSymbol);
 });
+
 
   // socket.on('mouseDown', resetObjectVectorAndDragCounter
   // );

@@ -44,21 +44,21 @@ io.on('connection', (socket) => {
   });
 
   // not mirroring properly.
-  socket.on('addSymbol', (randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) => {
-    socket.broadcast.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-  });
-  // socket.on('addSymbol', () => {
-  //   var newSymbolInfo = randomSymbolSeeder();
-  //   io.emit('addSymbol', newSymbolInfo);
+  // socket.on('addSymbol', (randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) => {
+  //   socket.broadcast.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
   // });
+  socket.on('addSymbol', () => {
+    var newSymbolInfo = randomSymbolSeeder();
+    io.emit('addSymbol', newSymbolInfo);
+  });
 
   socket.on('mouseDown', () => {
-    socket.broadcast.emit('mouseDown'); // one socket broadcasts game to all other sockets
+    socket.broadcast.emit('mouseDown'); // one socket broadcasts event to all other sockets
   });
 
   socket.on('disconnect', () => {
     console.log(':(');
-    io.emit(':( someone disconnected');  // io emits to all sockets
+    io.emit('disconnect', ':( someone disconnected');  // io emits to all sockets
   });
 });
 
@@ -66,57 +66,57 @@ io.on('connection', (socket) => {
 module.exports = app;
 
 
-// function randomSymbolSeeder(){
-//   //blueSymbol.place(quadrant3.center);
+function randomSymbolSeeder(){
+  //blueSymbol.place(quadrant3.center);
 
-//   var symbolRadius = 50 // blueSymbol.radius;
-//   var randomSideOfScreen = Math.floor(Math.random() * 4); // top-right-bottom-left
-//   var newSymbolLocation, newPositionX, newPositionY;
-//   var randomPointX = Math.random() * 600 + 0.1;  //  view.bounds.width + 0.1;
-//   var randomPointY = Math.random() * 600 + 0.1;  //  view.bounds.height + 0.1;
-//   var pointX, pointY, newVectorX, newVectorY;
-//   //// creating random point to enter from off-screen,
-//   /// and newVectorX and newVectorY:
-//   if (randomSideOfScreen === 0) {  // top
-//     pointY = -(symbolRadius);
-//     //newSymbolLocation = new Point(randomPointX, pointY);
-//     newPositionX = randomPointX;
-//     newPositionY = pointY;
-//     newVectorX = Math.random() * 14 - 7 + 0.1;
-//     newVectorY = Math.random() * 7 + 0.1;
-//   } else if (randomSideOfScreen === 2) {  // bottom
-//     pointY = 600 + symbolRadius;  //  (view.bounds.height + symbolRadius);
-//     //newSymbolLocation = new Point(randomPointX, pointY);
-//     newPositionX = randomPointX;
-//     newPositionY = pointY;
-//     newVectorX = Math.random() * 14 - 7 + 0.1;
-//     newVectorY = -(Math.random() * 7 + 0.1);
-//   } else if (randomSideOfScreen === 3) {  // left
-//     pointX = -(symbolRadius);
-//     //newSymbolLocation = new Point(pointX, randomPointY);
-//     newPositionX = pointX;
-//     newPositionY = randomPointY;
-//     newVectorX = Math.random() * 7 + 0.1;
-//     newVectorY = Math.random() * 14 - 7 + 0.1;
-//   } else if (randomSideOfScreen === 1) {  // right
-//     pointX = 600 + symbolRadius;  //  (view.bounds.width + symbolRadius);
-//     //newSymbolLocation = new Point(pointX, randomPointY);
-//     newPositionX = pointX;
-//     newPositionY = randomPointY;
-//     newVectorX = -(Math.random() * 7 + 0.1);
-//     newVectorY = Math.random() * 14 - 7 + 0.1;
-//   }
-//   //// creating random symbol type:
-//   var randomSymbolType = Math.floor(Math.random() * 4);
-//   //var newSymbolType = symbolTypes[randomSymbolType];
-//   return ({
-//     randomSymbolType,
-//     newPositionX,
-//     newPositionY,
-//     newVectorX,
-//     newVectorY
-//   });
-//   // if emitting to other sockets, uncomment the line below:
-//   // socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-//   //createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-// }
+  var symbolRadius = 50 // blueSymbol.radius;
+  var randomSideOfScreen = Math.floor(Math.random() * 4); // top-right-bottom-left
+  var newSymbolLocation, newPositionX, newPositionY;
+  var randomPointX = Math.random() * 600 + 0.1;  //  view.bounds.width + 0.1;
+  var randomPointY = Math.random() * 600 + 0.1;  //  view.bounds.height + 0.1;
+  var pointX, pointY, newVectorX, newVectorY;
+  //// creating random point to enter from off-screen,
+  /// and newVectorX and newVectorY:
+  if (randomSideOfScreen === 0) {  // top
+    pointY = -(symbolRadius);
+    //newSymbolLocation = new Point(randomPointX, pointY);
+    newPositionX = randomPointX;
+    newPositionY = pointY;
+    newVectorX = Math.random() * 14 - 7 + 0.1;
+    newVectorY = Math.random() * 7 + 0.1;
+  } else if (randomSideOfScreen === 2) {  // bottom
+    pointY = 600 + symbolRadius;  //  (view.bounds.height + symbolRadius);
+    //newSymbolLocation = new Point(randomPointX, pointY);
+    newPositionX = randomPointX;
+    newPositionY = pointY;
+    newVectorX = Math.random() * 14 - 7 + 0.1;
+    newVectorY = -(Math.random() * 7 + 0.1);
+  } else if (randomSideOfScreen === 3) {  // left
+    pointX = -(symbolRadius);
+    //newSymbolLocation = new Point(pointX, randomPointY);
+    newPositionX = pointX;
+    newPositionY = randomPointY;
+    newVectorX = Math.random() * 7 + 0.1;
+    newVectorY = Math.random() * 14 - 7 + 0.1;
+  } else if (randomSideOfScreen === 1) {  // right
+    pointX = 600 + symbolRadius;  //  (view.bounds.width + symbolRadius);
+    //newSymbolLocation = new Point(pointX, randomPointY);
+    newPositionX = pointX;
+    newPositionY = randomPointY;
+    newVectorX = -(Math.random() * 7 + 0.1);
+    newVectorY = Math.random() * 14 - 7 + 0.1;
+  }
+  //// creating random symbol type:
+  var randomSymbolType = Math.floor(Math.random() * 4);
+  //var newSymbolType = symbolTypes[randomSymbolType];
+  return ({
+    randomSymbolType,
+    newPositionX,
+    newPositionY,
+    newVectorX,
+    newVectorY
+  });
+  // if emitting to other sockets, uncomment the line below:
+  // socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+  //createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
+}

@@ -12,7 +12,8 @@ app.use(bodyParser.json());
 // app.use(express.static(path.join(__dirname, '../public/css')));
 // app.use('/paperscript', express.static(path.join(__dirname, '../public/js')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/paper', express.static(path.join(__dirname, '../node_modules/paper/dist/')));
+app.use('/bootstrap', express.static(path.join(__dirname, '..', 'node_modules/bootstrap/dist/css/')));
+app.use('/paper', express.static(path.join(__dirname, '..', 'node_modules/paper/dist/')));
 
 // app.use('/api', routes);
 
@@ -33,7 +34,7 @@ const server = app.listen(8000, (err) => {
 
 const io = socketio(server);
 
-// receives newly connected socket
+// io receives newly connected socket
 io.on('connection', (socket) => {
   console.log(':) Client connected. Id:', socket.id);
 
@@ -42,9 +43,13 @@ io.on('connection', (socket) => {
     io.emit('startGame');
   });
 
+  socket.on('mouseDown', () => {
+    socket.broadcast.emit('mouseDown'); // one socket broadcasts game to all other sockets
+  });
+
   socket.on('disconnect', () => {
     console.log(':(');
-    io.emit(':( someone disconnected');
+    io.emit(':( someone disconnected');  // io emits to all sockets
   });
 });
 

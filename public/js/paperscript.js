@@ -1,4 +1,4 @@
-/* global game, Group, io, Path, Point, project, Raster, Rectangle, Symbol, Tool, view */
+/* global Group, io, Path, Point, PointText, project, Raster, Rectangle, Size, Symbol, Tool, view */
 
 var socket = io();
 
@@ -63,12 +63,13 @@ var addToQuadrant3 = addToQuadrant(quadrant3);
 
 //// actually adding the backgrounds to the canvas:
 
-addToQuadrant0(blueBackgroundSymbol);
-addToQuadrant1(greenBackgroundSymbol);
-addToQuadrant2(redBackgroundSymbol);
-addToQuadrant3(yellowBackgroundSymbol);
-
-
+function initializingQuadrantBackgrounds(){
+  addToQuadrant0(blueBackgroundSymbol);
+  addToQuadrant1(greenBackgroundSymbol);
+  addToQuadrant2(redBackgroundSymbol);
+  addToQuadrant3(yellowBackgroundSymbol);
+}
+initializingQuadrantBackgrounds();
 
 
 
@@ -157,15 +158,22 @@ var tool = new Tool(),
   score = 0,
   gameNotStarted = true;
 
+function resetObjectVectorAndDragCounter(object) {
+    selectedObject = object;
+    selectedObject.newVectorX = 0;
+    selectedObject.newVectorY = 0;
+    dragCounter = 0;
+}
+
 tool.onMouseDown = function(e) {
   console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
   if (hitResult) {
-    selectedObject = hitResult.item;
     // functionality to start game:
     if (gameNotStarted) {
-      var color = selectedObject.definition.colorName;
-      var background = selectedObject.definition.background;
+      console.log('hitting here');
+      var color = hitResult.item.definition.colorName;
+      var background = hitResult.item.definition.background;
       console.log(color, '&&', background);
       if (background) return;
       gameNotStarted = false;
@@ -181,12 +189,11 @@ tool.onMouseDown = function(e) {
     }
     // functionality during game play:
     else {
-      selectedObject.newVectorX = 0;
-      selectedObject.newVectorY = 0;
-      dragCounter = 0;
+      resetObjectVectorAndDragCounter(hitResult.item);
     }
   }
 };
+
 
 //// instantiating onMouseDrag ////
 tool.onMouseDrag = function(e) {
@@ -253,8 +260,27 @@ function symbolInBounds(symbolBounds) {
 
 
 //// onFrame function (not yet called on view.onFrame):
+var newPoint,
+  startText,
+  startTextOptions = {
+    name: 'startText',
+    position: new Point((view.bounds.width / 10), (view.bounds.height / 2)),
+    fontSize: 100,
+    fillColor: 'white',
+    content: 'Get Ready!'
+  };
+
 var animateGame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
+  if (e.count === 1) startText = new PointText(startTextOptions);
+  if (e.count === 80) {
+    startText.content = 'GO!';
+    startText.position.x = view.bounds.width / 3;
+  }
+  if (e.count === 170) startText.remove();
+
+
+  e.count % 60 === 0 ? blueSymbol.place(new Point(-(blueSymbol.definition.radius), 300)) : null;
 
   //// rotate circle symbols:
   blueSymbol.definition.rotate(1);
@@ -265,7 +291,9 @@ var animateGame = function(e) {
   //// iterating through symbols:
   for (var a = 0; a < project.activeLayer.children.length; a++) {
     var symbol = project.activeLayer.children[a];
-    if (symbol.name === 'backgroundGroup' || symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
+    if (symbol.name === 'backgroundGroup' ||
+    symbol.name === 'startText' ||
+    symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
 
     //// adding/subtracting from score for each symbol:
     var symbolBounds = symbolBoundsCreator(symbol);  // finding leftCenter, rightCenter, topCenter, bottomCenter points
@@ -297,13 +325,20 @@ var animateGame = function(e) {
 
 function startAnimation(animateGameFn) {
   //console.log(animateGameFn);
+  //initializingQuadrantBackgrounds();
   view.onFrame = animateGameFn;
 }
 
 socket.on('startGame', function() {
   console.log('starting game via socket!!!');
+  gameNotStarted = false;
   startAnimation(animateGame);
 });
+
+socket.on('mouseDown', resetObjectVectorAndDragCounter
+);
+
+
 
 // game.hello = function() {
 //   console.log('hello world');

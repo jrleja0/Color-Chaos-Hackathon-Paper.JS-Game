@@ -270,6 +270,18 @@ function symbolInBounds(symbolBounds) {
     bottomCenter.y > 0 && topCenter.y < view.bounds.height);
 }
 
+// var players = 1;
+// var openingText = new PointText({
+//     name: 'openingText',
+//     position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 8)),
+//     fontSize: 40,
+//     fillColor: 'blue',
+//     content: 'Click an orb to start a ' + players + ' player game.'
+// });
+
+
+
+
 
 //// onFrame function (not yet called on view.onFrame):
 var startText,

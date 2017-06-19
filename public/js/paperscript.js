@@ -170,7 +170,8 @@ function resetObjectVectorAndDragCounter(object, broadcast) {
     dragCounter = 0;
 }
 
-tool.onMouseDown = function(e) {
+
+function mainMouseDownFn(e) {
   // console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
   if (hitResult) {
@@ -198,7 +199,9 @@ tool.onMouseDown = function(e) {
       resetObjectVectorAndDragCounter(hitResult.item, true);
     }
   }
-};
+}
+
+tool.onMouseDown = mainMouseDownFn;
 
 
 function setNewVectorOnDrag(x, y, broadcast) {
@@ -270,17 +273,29 @@ function symbolInBounds(symbolBounds) {
     bottomCenter.y > 0 && topCenter.y < view.bounds.height);
 }
 
-// var players = 1;
-// var openingText = new PointText({
-//     name: 'openingText',
-//     position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 8)),
-//     fontSize: 40,
-//     fillColor: 'blue',
-//     content: 'Click an orb to start a ' + players + ' player game.'
-// });
+var players = 1;
+var openingText = new PointText({
+    name: 'openingText',
+    position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 9)),
+    fontSize: 30,
+    fillColor: '#f6e8f9',
+    content: 'Click an orb to start a '
+});
+var openingText2 = new PointText({
+    name: 'openingText',
+    position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 9.5)),
+    fontSize: 30,
+    fillColor: '#f6e8f9',
+    content: players + ' player game.'
+});
 
+socket.on('playerNumChange', function(playerNum) {
+  openingText2.content = playerNum + ' player game.';
+});
 
-
+socket.on('disconnect', function(playerNum) {
+  openingText2.content = playerNum + ' player game.';
+});
 
 
 //// onFrame function (not yet called on view.onFrame):
@@ -301,7 +316,11 @@ function endGame() {
 
 var animateGame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
-  if (e.count === 1) startText = new PointText(startTextOptions);
+  if (e.count === 1) {
+    openingText.remove();
+    openingText2.remove();
+    startText = new PointText(startTextOptions);
+  }
   if (e.count === 80) {
     startText.content = 'GO!';
     startText.position.x = view.bounds.width / 3;
@@ -381,7 +400,7 @@ var animateGame = function(e) {
     startText.position.x -= 400;
     startText.content = 'Stop!';
   }
-  if (e.count === 4006) {  // test 818 // 6000
+  if (e.count === 400) {  // test 818 // 40006 // 6000
     endGame();
   }
 };
@@ -433,7 +452,7 @@ socket.on('endGame', function(scores) {
   var outcomeText = new PointText({
     name: 'outcomeText',
     content: rank === 1 ? 'You Won!' : 'Try Again!',
-    fillColor: rank === 1 ? 'yellow' : 'brown',
+    fillColor: rank === 1 ? 'yellow' : 'red',
     fontSize: 100,
     position: new Point(quadrant0.width, 100)
   });
@@ -446,7 +465,29 @@ socket.on('endGame', function(scores) {
     position: new Point(quadrant0.width, view.bounds.height / 2 - 50)
   });
   project.activeLayer.addChild(rankText);
+  var replaySymbol = greenSymbol.place(new Point(quadrant0.width, view.bounds.height / 10 * 8));
+  replaySymbol.name = 'replaySymbol';
+  var replayText = new PointText({
+    name: 'replayText',
+    content: 'Replay!',
+    fillColor: 'yellow',
+    fontSize: 30,
+    position: new Point(replaySymbol.bounds.center)
+  });
+  function replayOnMouseDown(e) {
+    var hitResult = project.activeLayer.hitTest(e.point);
+    console.log(hitResult.item.name);
+    if (hitResult && hitResult.item.name &&
+      (hitResult.item.name === 'replaySymbol' ||
+      hitResult.item.name === 'replayText')) {
+      window.location.href = window.location.origin;
+    }
+  }
+  tool.onMouseDown = replayOnMouseDown;
+  //console.log('here', tool, tool.onMouseDown);
 });
+
+
 
 
 // function randomSymbolSeeder(){

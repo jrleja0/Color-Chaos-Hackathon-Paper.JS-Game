@@ -400,7 +400,7 @@ var animateGame = function(e) {
     startText.position.x -= 400;
     startText.content = 'Stop!';
   }
-  if (e.count === 400) {  // test 818 // 40006 // 6000
+  if (e.count === 40006) {  // test 818 // 40006 // 6000
     endGame();
   }
 };

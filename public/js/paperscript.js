@@ -5,7 +5,6 @@ var socket = io();
 console.log('running-- w:', view.size.width, '&& h:', view.size.height);
 //const largerScreenDim = view.size.width > view.size.height ? view.size.width : view.size.height;
 
-
 //// creating background Symbols ////
 function createBackground(rasterColor) {
   var quadrantSize = new Size(view.size.width / 2, view.size.height / 2);
@@ -28,7 +27,6 @@ var greenBackgroundSymbol = createBackground('greenPattern');
 var redBackgroundSymbol = createBackground('redPattern');
 var yellowBackgroundSymbol = createBackground('yellowPattern');
 
-
 //// creating four quadrants ////
 function createQuadrant(point) {
   var quadrantSize = new Size(view.size.width / 2, view.size.height / 2);
@@ -40,15 +38,12 @@ var quadrant1 = createQuadrant(new Point(view.size.width / 2, 0));
 var quadrant2 = createQuadrant(new Point(0, view.size.height / 2));
 var quadrant3 = createQuadrant(new Point(view.size.width / 2, view.size.height / 2));
 
-
 //// function to add background Symbols to quadrants ////
 var backgroundGroup = new Group();
 backgroundGroup.name = 'backgroundGroup';
 
 function addToQuadrant(quadrant) {
   return function (backgroundSymbol) {
-    // console.log(backgroundSymbol);
-    // console.log(quadrant.x, quadrant.y, quadrant);
     var symbol = backgroundSymbol.place(quadrant.center);
     backgroundGroup.addChild(symbol);
     quadrant.colorName = backgroundSymbol.colorName;
@@ -60,9 +55,7 @@ var addToQuadrant1 = addToQuadrant(quadrant1);
 var addToQuadrant2 = addToQuadrant(quadrant2);
 var addToQuadrant3 = addToQuadrant(quadrant3);
 
-
 //// actually adding the backgrounds to the canvas:
-
 function initializingQuadrantBackgrounds(){
   addToQuadrant0(blueBackgroundSymbol);
   addToQuadrant1(greenBackgroundSymbol);
@@ -71,11 +64,10 @@ function initializingQuadrantBackgrounds(){
 }
 initializingQuadrantBackgrounds();
 
-
 //// creating circle symbols ////
 var createCircleSymbol = function(color, rotationDegree) {
   var smallerViewDim = Math.min(view.size.height, view.size.width);
-  var circle = new Path.Circle(new Point(100, 100), smallerViewDim / 12);    //  Path.Circle(new Point(100, 100), 60);
+  var circle = new Path.Circle(new Point(100, 100), smallerViewDim / 12);
   var colorBackground = new Raster(color);
   colorBackground.scale(0.25);
   //// cropping/masking colorBackground onto circle ////
@@ -96,8 +88,6 @@ var greenSymbol = createCircleSymbol('greenPattern');
 var redSymbol = createCircleSymbol('redPattern');
 var yellowSymbol = createCircleSymbol('yellowPattern');
 
-
-
 //// placing circle symbols:
 var yel1 = yellowSymbol.place(quadrant3.center);
 var red1 = redSymbol.place(quadrant2.center);
@@ -106,45 +96,6 @@ var blu1 = blueSymbol.place(quadrant0.center);
 
 var symbolsGroup = new Group([yel1, red1, gre1, blu1]);
 symbolsGroup.name = 'symbolsGroup';
-
-console.log(project.activeLayer.children);
-// console.log(yellowSymbol.name === yellowBackgroundSymbol.name);
-// console.log(blueSymbol.name === blueBackgroundSymbol.name);
-// console.log(greenSymbol.name === greenBackgroundSymbol.name);
-// console.log(redSymbol.name === redBackgroundSymbol.name);
-
-
-  //// testing the .definition.colorName and .definition.background properties on the instances:
-  for (var a = 0; a < backgroundGroup.children.length; a++) {
-    console.log('backGroup', 'name', backgroundGroup.children[a].definition.colorName, 'background', backgroundGroup.children[a].definition.background);
-  }
-
-  for (var b = 1; b < symbolsGroup.length; b++) {
-    console.log('name', symbolsGroup.children[b].definition.colorName, 'background', symbolsGroup.children[b].definition.background);
-  }
-  console.log(quadrant0.colorName);
-  console.log(quadrant1.colorName);
-  console.log(quadrant2.colorName);
-  console.log(quadrant3.colorName);
-
-
-// testing midpoint:
-// console.log(view.bounds.center);
-// var circleMidPoint = new Path.Circle(view.bounds.center, 10);
-// circleMidPoint.fillColor = 'white';
-
-
-  // project.activeLayer.children[0].remove();
-  // project.activeLayer.children[1].remove();
-  // project.activeLayer.children[2].remove();
-  // project.activeLayer.children[3].remove();
-
-  console.log('child num', project.activeLayer.children);
-console.log(quadrant0);
-
-  // project.activeLayer.children.insertChild(0, )
-
-
 
 //// instantiating onMouseDown ////
 var tool = new Tool(),
@@ -162,27 +113,27 @@ function resetObjectVectorAndDragCounter(object, broadcast) {
     dragCounter = 0;
 }
 
-
 function mainMouseDownFn(e) {
-  // console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
   if (hitResult) {
     // functionality to start game:
     if (gameNotStarted) {
-      // console.log('hitting here');
       var color = hitResult.item.definition.colorName;
       var background = hitResult.item.definition.background;
-      // console.log(color, '&&', background);
       if (background) return;
       gameNotStarted = false;
+      // TODO: new feature: clicking a different orb at start will initialize a different game mode.
       if (color === 'bluePattern' && !background) {
         player1 = true;
         socket.emit('startGame');
       } else if (color === 'greenPattern' && !background) {
+        player1 = true;
         socket.emit('startGame');
       } else if (color === 'redPattern' && !background) {
+        player1 = true;
         socket.emit('startGame');
       } else if (color === 'yellowPattern' && !background) {
+        player1 = true;
         socket.emit('startGame');
       }
     }
@@ -195,23 +146,19 @@ function mainMouseDownFn(e) {
 
 tool.onMouseDown = mainMouseDownFn;
 
-
 function setNewVectorOnDrag(x, y, broadcast) {
-  console.log('hitting here')
-  if (selectedObject && dragCounter < 1) {
+  if (selectedObject && dragCounter < 1) {  // drag event captures a lot of data, so only the first drag event is used each time an object is dragged.
     if (broadcast) socket.emit('mouseDrag', x, y);
-    selectedObject.newVectorX += x / 10;  // x / 10 and 1 drag event.
+    selectedObject.newVectorX += x / 10;
     selectedObject.newVectorY += y / 10;
   }
 }
 
 //// instantiating onMouseDrag ////
 tool.onMouseDrag = function(e) {
-  //console.log(e.delta);
   var x = e.delta.x, y = e.delta.y;
   setNewVectorOnDrag(x, y, true);
 };
-
 
 function symbolBoundsCreator(symbol) {
   return ([
@@ -221,7 +168,6 @@ function symbolBoundsCreator(symbol) {
     (symbol.position + new Point(0, symbol.definition.radius))   // bottomCenter point
   ]);
 }
-
 
 function overQuadrant0(point) {
   return point.x < view.bounds.center.x && point.y < view.bounds.center.y;
@@ -289,8 +235,6 @@ socket.on('disconnect', function(playerNum) {
   openingText2.content = playerNum + ' player game.';
 });
 
-
-//// onFrame function (not yet called on view.onFrame):
 var startText,
   startTextOptions = {
     name: 'startText',
@@ -305,9 +249,8 @@ function endGame() {
   socket.emit('endGame', score);
 }
 
-
+//// onFrame function (will be called on view.onFrame):
 var animateGame = function(e) {
-  //console.log(selectedObject ? selectedObject.newVectorX : null);
   if (e.count === 1) {
     openingText.remove();
     openingText2.remove();
@@ -319,12 +262,9 @@ var animateGame = function(e) {
   }
   if (e.count === 170) startText.remove();
 
-  if (player1 && e.count > 179 && e.count % 8 === 0) {  // e.count % 8
-    // console.log(e.count);
-    //randomSymbolSeeder();
+  if (player1 && e.count > 179 && e.count % 8 === 0) {
     socket.emit('addSymbol');
   }
-
 
   //// rotate circle symbols:
   blueSymbol.definition.rotate(1);
@@ -332,16 +272,9 @@ var animateGame = function(e) {
   redSymbol.definition.rotate(-1);
   yellowSymbol.definition.rotate(-1);
 
-  // for (var a = 0; a < project.activeLayer.children.length; a++) {
-  //   var symbol = project.activeLayer.children[a];
-  //   if (symbol.name === 'backgroundGroup' ||
-  //   symbol.name === 'startText' ||
-  //   symbol.definition.background) continue;  // if it is not a symbol, then continue loop.
-
   //// iterating through symbols:
   for (var a = 0; a < symbolsGroup.children.length; a++) {
     var symbol = symbolsGroup.children[a];
-    // console.log('newSy2', symbol);
     //// adding/subtracting from score for each symbol:
     var symbolBounds = symbolBoundsCreator(symbol);  // finding leftCenter, rightCenter, topCenter, bottomCenter points
     if (!symbolInBounds(symbolBounds)) {
@@ -353,7 +286,7 @@ var animateGame = function(e) {
     //// iterating through symbolBounds' points
     for (var b = 0; b < symbolBounds.length; b++) {
       var borderingQuadrant = checkingQuadrantOverlap(symbolBounds[b]);  // returns quadrant that symbolPoint overlaps.
-      var colorMatch = checkingColorMatch(symbol, borderingQuadrant);  // Boolean
+      var colorMatch = checkingColorMatch(symbol, borderingQuadrant);  // (Boolean)
       score += colorMatch ? 2 : -1;
     }
 
@@ -369,35 +302,33 @@ var animateGame = function(e) {
     }
   }
 
-  if (e.count === 3600) {  // test 410
+  if (e.count === 3600) {
     startText.content = 'Almost Done!';
     startText.fontSize = 80;
     startText.position.x -= 40;
     project.activeLayer.addChild(startText);
   }
-  if (e.count === 3700) startText.remove();  // test 510
-  if (e.count === 3810) {  // test 630
+  if (e.count === 3700) startText.remove();
+  if (e.count === 3810) {
     project.activeLayer.addChild(startText);
     startText.content = '3';
   }
-  if (e.count === 3870) {  // test 690
+  if (e.count === 3870) {
     startText.position.x += 200;
     startText.content = '2';
   }
-  if (e.count === 3930) {  // test 750
+  if (e.count === 3930) {
     startText.position.x += 200;
     startText.content = '1';
   }
-  if (e.count === 3990) {  // test 810
+  if (e.count === 3990) {
     startText.position.x -= 400;
     startText.content = 'Stop!';
   }
-  if (e.count === 4006) {  // test 818 // 4006 // 6000
+  if (e.count === 4006) {
     endGame();
   }
 };
-
-
 
 function createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
   var symbolTypes = [blueSymbol, greenSymbol, redSymbol, yellowSymbol];
@@ -405,41 +336,30 @@ function createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, 
   symbolsGroup.addChild(newSymbol);
   newSymbol.newVectorX = newVectorX;
   newSymbol.newVectorY = newVectorY;
-  // console.log('newsymb', symbolsGroup.children);
 }
 
 function startAnimation(animateGameFn) {
-  //console.log(animateGameFn);
-  //initializingQuadrantBackgrounds();
   view.onFrame = animateGameFn;
 }
 
 socket.on('startGame', function() {
-  console.log('starting game via socket!!!');
   gameNotStarted = false;
   startAnimation(animateGame);
 });
 
-// socket.on('addSymbol', function(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY) {
-//   console.log('seed', typeof randomSymbolType, typeof newPositionX, typeof newPositionY, typeof newVectorX, typeof newVectorY);
-//   createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-// });
 socket.on('addSymbol', function(newSymbolInfo) {
-  // console.log(newSymbolInfo);
   var newSymbol = createSymbol(newSymbolInfo['randomSymbolType'], newSymbolInfo['newPositionX'], newSymbolInfo['newPositionY'], newSymbolInfo['newVectorX'], newSymbolInfo['newVectorY']);
-  // console.log('newSymb', newSymbol);
 });
-
 
 socket.on('mouseDown', resetObjectVectorAndDragCounter);
 
 socket.on('mouseDrag', setNewVectorOnDrag);
 
 socket.on('endGame', function(scores) {
-  console.log(score);
-  console.log(scores);
+  console.log('final score', score);
+  console.log('scores', scores);
   var rank = scores.indexOf(score) + 1;
-  var players = scores.length;
+  var playersNum = scores.length;
   startText.remove();
   var outcomeText = new PointText({
     name: 'outcomeText',
@@ -451,7 +371,7 @@ socket.on('endGame', function(scores) {
   project.activeLayer.addChild(outcomeText);
   var rankText = new PointText({
     name: 'rankText',
-    content: 'You ranked ' + rank + ' out of ' + players + ' players.',
+    content: 'You ranked ' + rank + ' out of ' + playersNum + ' players.',
     fillColor: 'white',
     fontSize: 40,
     position: new Point(quadrant0.width, view.bounds.height / 2 - 50)
@@ -468,7 +388,6 @@ socket.on('endGame', function(scores) {
   });
   function replayOnMouseDown(e) {
     var hitResult = project.activeLayer.hitTest(e.point);
-    console.log(hitResult.item.name);
     if (hitResult && hitResult.item.name &&
       (hitResult.item.name === 'replaySymbol' ||
       hitResult.item.name === 'replayText')) {
@@ -476,5 +395,4 @@ socket.on('endGame', function(scores) {
     }
   }
   tool.onMouseDown = replayOnMouseDown;
-  //console.log('here', tool, tool.onMouseDown);
 });

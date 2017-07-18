@@ -4,14 +4,10 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
 const socketio = require('socket.io');
-const _every = require('lodash').every;
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(express.static(path.join(__dirname, '../public/html')));
-// app.use(express.static(path.join(__dirname, '../public/css')));
-// app.use('/paperscript', express.static(path.join(__dirname, '../public/js')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/bootstrap', express.static(path.join(__dirname, '..', 'node_modules/bootstrap/dist/css/')));
 app.use('/paper', express.static(path.join(__dirname, '..', 'node_modules/paper/dist/')));
@@ -47,10 +43,12 @@ io.on('connection', (socket) => {
   players.push(createPlayer(socket.id));
   console.log('players:', players.length);
 
+  io.emit('playerNumChange', players.length);
+
   socket.on('startGame', () => {
     //console.log(animateGameFn, '!!!!');
     scores = [];
-    io.emit('startGame');
+    io.emit('startGame');  //  io emits to all sockets
   });
 
   // not mirroring properly.
@@ -82,12 +80,12 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(':(');
+    socket.broadcast.emit('playerNumChange', players.length); // not working
 
     var playerIdxToDelete = players.map(player => player.socketId).indexOf(socket.id);
     var removedPlayer = players.splice(playerIdxToDelete, 1);
     console.log(playerIdxToDelete, removedPlayer);
     console.log('pl', players);
-    //io.emit('disconnect', ':( someone disconnected');  // io emits to all sockets
   });
 });
 

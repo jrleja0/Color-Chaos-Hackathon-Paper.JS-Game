@@ -72,14 +72,6 @@ function initializingQuadrantBackgrounds(){
 initializingQuadrantBackgrounds();
 
 
-
-//// TO DO:
-//// create symbol
-//// place each color symbol in each quadrant
-//// change whether it is visible or not.
-
-
-
 //// creating circle symbols ////
 var createCircleSymbol = function(color, rotationDegree) {
   var smallerViewDim = Math.min(view.size.height, view.size.width);
@@ -170,7 +162,8 @@ function resetObjectVectorAndDragCounter(object, broadcast) {
     dragCounter = 0;
 }
 
-tool.onMouseDown = function(e) {
+
+function mainMouseDownFn(e) {
   // console.log('mouse down');
   var hitResult = project.activeLayer.hitTest(e.point);
   if (hitResult) {
@@ -198,7 +191,9 @@ tool.onMouseDown = function(e) {
       resetObjectVectorAndDragCounter(hitResult.item, true);
     }
   }
-};
+}
+
+tool.onMouseDown = mainMouseDownFn;
 
 
 function setNewVectorOnDrag(x, y, broadcast) {
@@ -270,6 +265,30 @@ function symbolInBounds(symbolBounds) {
     bottomCenter.y > 0 && topCenter.y < view.bounds.height);
 }
 
+var players = 1;
+var openingText = new PointText({
+    name: 'openingText',
+    position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 9)),
+    fontSize: 30,
+    fillColor: '#f6e8f9',
+    content: 'Click an orb to start a '
+});
+var openingText2 = new PointText({
+    name: 'openingText',
+    position: new Point((view.bounds.width / 10), (view.bounds.height / 10 * 9.5)),
+    fontSize: 30,
+    fillColor: '#f6e8f9',
+    content: players + ' player game.'
+});
+
+socket.on('playerNumChange', function(playerNum) {
+  openingText2.content = playerNum + ' player game.';
+});
+
+socket.on('disconnect', function(playerNum) {
+  openingText2.content = playerNum + ' player game.';
+});
+
 
 //// onFrame function (not yet called on view.onFrame):
 var startText,
@@ -289,7 +308,11 @@ function endGame() {
 
 var animateGame = function(e) {
   //console.log(selectedObject ? selectedObject.newVectorX : null);
-  if (e.count === 1) startText = new PointText(startTextOptions);
+  if (e.count === 1) {
+    openingText.remove();
+    openingText2.remove();
+    startText = new PointText(startTextOptions);
+  }
   if (e.count === 80) {
     startText.content = 'GO!';
     startText.position.x = view.bounds.width / 3;
@@ -369,7 +392,7 @@ var animateGame = function(e) {
     startText.position.x -= 400;
     startText.content = 'Stop!';
   }
-  if (e.count === 4006) {  // test 818 // 6000
+  if (e.count === 4006) {  // test 818 // 4006 // 6000
     endGame();
   }
 };
@@ -421,7 +444,7 @@ socket.on('endGame', function(scores) {
   var outcomeText = new PointText({
     name: 'outcomeText',
     content: rank === 1 ? 'You Won!' : 'Try Again!',
-    fillColor: rank === 1 ? 'yellow' : 'brown',
+    fillColor: rank === 1 ? 'yellow' : 'red',
     fontSize: 100,
     position: new Point(quadrant0.width, 100)
   });
@@ -434,106 +457,24 @@ socket.on('endGame', function(scores) {
     position: new Point(quadrant0.width, view.bounds.height / 2 - 50)
   });
   project.activeLayer.addChild(rankText);
+  var replaySymbol = greenSymbol.place(new Point(quadrant0.width, view.bounds.height / 10 * 8));
+  replaySymbol.name = 'replaySymbol';
+  var replayText = new PointText({
+    name: 'replayText',
+    content: 'Replay!',
+    fillColor: 'yellow',
+    fontSize: 30,
+    position: new Point(replaySymbol.bounds.center)
+  });
+  function replayOnMouseDown(e) {
+    var hitResult = project.activeLayer.hitTest(e.point);
+    console.log(hitResult.item.name);
+    if (hitResult && hitResult.item.name &&
+      (hitResult.item.name === 'replaySymbol' ||
+      hitResult.item.name === 'replayText')) {
+      window.location.href = window.location.origin;
+    }
+  }
+  tool.onMouseDown = replayOnMouseDown;
+  //console.log('here', tool, tool.onMouseDown);
 });
-
-
-// function randomSymbolSeeder(){
-//   //blueSymbol.place(quadrant3.center);
-
-//   var symbolRadius = blueSymbol.radius;
-//   var randomSideOfScreen = Math.floor(Math.random() * 4); // top-right-bottom-left
-//   var newSymbolLocation, newPositionX, newPositionY;
-//   var randomPointX = Math.random() * view.bounds.width + 0.1;
-//   var randomPointY = Math.random() * view.bounds.height + 0.1;
-//   var pointX, pointY, newVectorX, newVectorY;
-//   //// creating random point to enter from off-screen,
-//   /// and newVectorX and newVectorY:
-//   if (randomSideOfScreen === 0) {  // top
-//     pointY = -(symbolRadius);
-//     //newSymbolLocation = new Point(randomPointX, pointY);
-//     newPositionX = randomPointX;
-//     newPositionY = pointY;
-//     newVectorX = Math.random() * 14 - 7 + 0.1;
-//     newVectorY = Math.random() * 7 + 0.1;
-//   } else if (randomSideOfScreen === 2) {  // bottom
-//     pointY = (view.bounds.height + symbolRadius);
-//     //newSymbolLocation = new Point(randomPointX, pointY);
-//     newPositionX = randomPointX;
-//     newPositionY = pointY;
-//     newVectorX = Math.random() * 14 - 7 + 0.1;
-//     newVectorY = -(Math.random() * 7 + 0.1);
-//   } else if (randomSideOfScreen === 3) {  // left
-//     pointX = -(symbolRadius);
-//     //newSymbolLocation = new Point(pointX, randomPointY);
-//     newPositionX = pointX;
-//     newPositionY = randomPointY;
-//     newVectorX = Math.random() * 7 + 0.1;
-//     newVectorY = Math.random() * 14 - 7 + 0.1;
-//   } else if (randomSideOfScreen === 1) {  // right
-//     pointX = (view.bounds.width + symbolRadius);
-//     //newSymbolLocation = new Point(pointX, randomPointY);
-//     newPositionX = pointX;
-//     newPositionY = randomPointY;
-//     newVectorX = -(Math.random() * 7 + 0.1);
-//     newVectorY = Math.random() * 14 - 7 + 0.1;
-//   }
-//   //// creating random symbol type:
-//   var randomSymbolType = Math.floor(Math.random() * 4);
-//   //var newSymbolType = symbolTypes[randomSymbolType];
-
-//   // if emitting to other sockets, uncomment the line below:
-//   //socket.emit('addSymbol', randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-//   createSymbol(randomSymbolType, newPositionX, newPositionY, newVectorX, newVectorY);
-// }
-
-
-
-
-
-// //   //// populate symbol objects ////
-// //   const seedYellowSymbol = () => {
-// //     yellowSymbol.place(view.size.multiply(Point.random()));
-// //   };
-// //   const seedBlueSymbol = () => {
-// //     blueSymbol.place(view.size.multiply(Point.random()));
-// //   };
-
-
-// //   let fading = true;
-// //   view.onFrame = (e) => {
-// //     // console.log(e.count);
-// //     //// seed the yellow and blue symbols ////
-// //     if (e.count < 31) {
-// //       e.count % 5 === 0 ? seedBlueSymbol() : seedYellowSymbol();
-// //     }
-// //     // symbols begin to rotate
-// //     if (e.count > 20) {
-// //       yellowSymbol.definition.rotate(1);
-// //       blueSymbol.definition.rotate(-3);
-// //     }
-// //     // symbols begin to move in random directions
-// //     // saving newPointX and newPointY to each symbol obj instance, so that symbol instance goes in a particular direction in each frame.
-// //     // direction will be reassigned every 20 frames.
-// //     if (e.count > 39 && e.count % 20 === 0) {
-// //       for (let i = 4; i < project.activeLayer.children.length; i++) {  // forEach will not work properly.
-// //         let symbol = project.activeLayer.children[i];
-// //         // assign points between -5 and +5, every 20 frames:
-// //         symbol.newPointX = Math.random() * 10 - 5;
-// //         symbol.newPointY = Math.random() * 10 - 5;
-// //       }
-// //     }
-// //     // change symbols' positions
-// //     if (e.count > 39) {
-// //       for (let i = 1; i < project.activeLayer.children.length; i++) {
-// //         let symbol = project.activeLayer.children[i];
-// //         symbol.position.x += symbol.newPointX;
-// //         symbol.position.y += symbol.newPointY;
-// //         // symbol.position.x += symbol.bounds.width / 20; // uncomment to have all symbols move to the right.
-// //       }
-// //     }
-// //     //// green background fades in and out ////
-// //     if (greenBackground.opacity < 0.05) fading = false;
-// //     if (greenBackground.opacity > 0.95) fading = true;
-// //     fading ? greenBackground.opacity -= 0.003 : greenBackground.opacity += 0.003;
-// //   };
-// };

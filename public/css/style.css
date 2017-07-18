@@ -1,7 +1,6 @@
 html, body {
   background-color: #121;
   margin: 0 auto;
-  /*height: 100%;*/
   overflow: hidden;
   text-align: center;
 }
@@ -11,8 +10,6 @@ html, body {
   overflow: hidden;
   min-height: 600px;
   min-width: 600px;
-  /*height: 100%;
-  width: 100%;*/
 }
 
 #title {

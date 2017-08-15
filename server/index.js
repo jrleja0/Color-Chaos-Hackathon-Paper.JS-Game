@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
 const socketio = require('socket.io');
+const PORT = process.env.PORT || 8000;
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -23,9 +24,9 @@ app.use( (err, req, res, next) => {
   res.status(err.status || 500).send(err.message || 'Internal server error.');
 });
 
-const server = app.listen(8000, (err) => {
+const server = app.listen(PORT, (err) => {
   if (err) throw err;
-  console.log('listening on 8000');
+  console.log(`listening on ${PORT}`);
 });
 
 const io = socketio(server);

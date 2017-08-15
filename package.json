@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon ./server"
+    "start-dev": "nodemon ./server",
+    "start": "node ./server"
   },
   "author": "Jasiu Leja <jleja09@gmail.com>",
   "license": "MIT",
